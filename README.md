@@ -1,4 +1,4 @@
-# VC-Keyboard
+# Yiy-Workstation
 
 **ESP32-S3 驱动的多功能桌面外设——带屏幕、按键、编码器和麦克风的迷你终端。**
 

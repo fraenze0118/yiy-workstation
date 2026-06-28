@@ -1,8 +1,8 @@
-# VC-Keyboard — Claude 项目上下文
+# Yiy-Workstation — Claude 项目上下文
 
 ## 项目概述
 
-这是 ESP32-S3 驱动的多功能桌面外设。硬件通过 USB CDC Serial 连接 PC，PC 负责所有逻辑，设备负责 IO（显示、按键、编码器、麦克风）。
+这是 ESP32-S3 驱动的多功能桌面外设（原名VC-Keyboard）。硬件通过 USB CDC Serial 连接 PC，PC 负责所有逻辑，设备负责 IO（显示、按键、编码器、麦克风）。
 
 ## 关键文件
 
