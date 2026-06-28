@@ -1,0 +1,38 @@
+# PlatformIO build output
+.pio/
+.pioenvs/
+.piolibdeps/
+
+# IDE
+.vscode/
+.idea/
+*.code-workspace
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.egg-info/
+
+# OS
+.DS_Store
+Thumbs.db
+Desktop.ini
+
+# Logs
+*.log
+
+# ESP-IDF (if used later)
+build/
+sdkconfig
+sdkconfig.old
+dependencies.lock
+managed_components/
+
+# Backup files
+*~
+*.swp
+*.bak
+
+scripts/
+doc/
