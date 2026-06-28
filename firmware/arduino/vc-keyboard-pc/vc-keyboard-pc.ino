@@ -120,6 +120,134 @@ void IRAM_ATTR enc_btn_isr() {
 }
 
 // ============================================================
+// 启动画面
+// ============================================================
+
+// ST7789 INVON: 硬件层面取反所有颜色 → 代码中预先取反, 双重取反=原始色
+#define INV(c) ((uint16_t)(~(c)))
+
+void show_splash_screen() {
+  // ── 背景: 深色科技风 ──
+  tft.fillScreen(INV(0x0004));   // deep navy-black
+
+  // 几何色块: 顶部 & 底部 accent bars
+  tft.fillRect(0, 0, 320, 3, INV(0x07FF));         // top edge — bright cyan
+  tft.fillRect(0, 237, 320, 3, INV(0x07FF));       // bottom edge
+
+  // 扫描线纹理: 每 6px 一条半透明线
+  for (int y = 10; y < 230; y += 6) {
+    tft.drawFastHLine(20, y, 280, INV(0x020C));
+  }
+
+  // ── 双层边框 ──
+  tft.drawRect(10, 10, 300, 220, INV(0x0318));     // outer: dim cyan
+  tft.drawRect(13, 13, 294, 214, INV(0x063F));     // inner: brighter
+
+  // ── 四角括号 ──
+  const int CX = 22, CY = 22, CL = 24, CG = 2;
+  const uint16_t CA = INV(0x07FF);  // accent cyan
+  // TL
+  tft.drawFastHLine(CX, CY, CL, CA);           tft.drawFastVLine(CX, CY, CL, CA);
+  tft.drawFastHLine(CX, CY + CG, CL - 4, CA);  tft.drawFastVLine(CX + CG, CY, CL - 4, CA);
+  // TR
+  tft.drawFastHLine(298 - CL, CY, CL, CA);     tft.drawFastVLine(298, CY, CL, CA);
+  tft.drawFastHLine(302 - CL + 4, CY + CG, CL - 4, CA); tft.drawFastVLine(298 - CG, CY, CL - 4, CA);
+  // BL
+  tft.drawFastHLine(CX, 218, CL, CA);          tft.drawFastVLine(CX, 218 - CL, CL, CA);
+  tft.drawFastHLine(CX, 218 - CG, CL - 4, CA); tft.drawFastVLine(CX + CG, 218 - CL + 4, CL - 4, CA);
+  // BR
+  tft.drawFastHLine(298 - CL, 218, CL, CA);    tft.drawFastVLine(298, 218 - CL, CL, CA);
+  tft.drawFastHLine(302 - CL + 4, 218 - CG, CL - 4, CA); tft.drawFastVLine(298 - CG, 218 - CL + 4, CL - 4, CA);
+
+  // ── 装饰小菱形 (四角内侧) ──
+  const int DX = 50, DY = 48;
+  // TL diamond
+  tft.drawPixel(DX, DY, INV(0x07FF));
+  tft.drawFastHLine(DX - 3, DY, 7, INV(0x063F));
+  tft.drawFastVLine(DX, DY - 3, 7, INV(0x063F));
+  // TR diamond
+  tft.drawPixel(320 - DX, DY, INV(0x07FF));
+  tft.drawFastHLine(320 - DX - 3, DY, 7, INV(0x063F));
+  tft.drawFastVLine(320 - DX, DY - 3, 7, INV(0x063F));
+  // BL diamond
+  tft.drawPixel(DX, 240 - DY, INV(0x07FF));
+  tft.drawFastHLine(DX - 3, 240 - DY, 7, INV(0x063F));
+  tft.drawFastVLine(DX, 240 - DY - 3, 7, INV(0x063F));
+  // BR diamond
+  tft.drawPixel(320 - DX, 240 - DY, INV(0x07FF));
+  tft.drawFastHLine(320 - DX - 3, 240 - DY, 7, INV(0x063F));
+  tft.drawFastVLine(320 - DX, 240 - DY - 3, 7, INV(0x063F));
+
+  // ── 标题区顶部装饰线 ──
+  tft.drawFastHLine(60, 76, 200, INV(0x041F));
+  tft.drawFastHLine(70, 78, 180, INV(0x063F));
+
+  // ── 主标题 ──
+  tft.setTextSize(3);
+  tft.setTextColor(INV(0x07FF));   // cyan
+  tft.setCursor(32, 84);
+  tft.print("Yiy-Workstation");
+
+  // ── 标题区底部装饰线 ──
+  tft.drawFastHLine(70, 114, 180, INV(0x063F));
+  tft.drawFastHLine(60, 116, 200, INV(0x041F));
+
+  // ── 副标题 ──
+  tft.setTextSize(2);
+  tft.setTextColor(INV(0x053C));   // medium cyan-blue
+  tft.setCursor(62, 130);
+  tft.print("Designed by YYC");
+
+  // ── 分隔线 ──
+  tft.drawFastHLine(90, 162, 140, INV(0x039F));
+  // 分隔线中间圆点
+  tft.fillCircle(160, 162, 3, INV(0x07FF));
+  tft.fillCircle(160, 162, 1, INV(0xFFFF));
+
+  // ── 底部信息栏 ──
+  tft.setTextSize(1);
+
+  // 版本
+  tft.setCursor(46, 178);
+  tft.setTextColor(INV(0x063F));
+  tft.print("v1.0");
+
+  // 竖分隔
+  tft.drawFastVLine(76, 176, 14, INV(0x0318));
+
+  // MIC 状态
+  tft.setCursor(84, 178);
+  tft.setTextColor(mic_initialized ? INV(0x07E0) : INV(0xF800));  // green : red
+  tft.print(mic_initialized ? "MIC" : "MIC");
+
+  // 竖分隔
+  tft.drawFastVLine(134, 176, 14, INV(0x0318));
+
+  // MCU
+  tft.setCursor(142, 178);
+  tft.setTextColor(INV(0x063F));
+  tft.print("ESP32-S3");
+
+  // 竖分隔
+  tft.drawFastVLine(204, 176, 14, INV(0x0318));
+
+  // 状态 dot
+  tft.fillCircle(216, 182, 3, mic_initialized ? INV(0x07E0) : INV(0xF800));
+
+  tft.setCursor(224, 178);
+  tft.setTextColor(INV(0x063F));
+  tft.print(mic_initialized ? "OK" : "FAIL");
+
+  // ── 底部两侧小十字 ──
+  // left cross
+  tft.drawFastHLine(44, 210, 8, INV(0x0318));
+  tft.drawFastVLine(48, 206, 8, INV(0x0318));
+  // right cross
+  tft.drawFastHLine(268, 210, 8, INV(0x0318));
+  tft.drawFastVLine(272, 206, 8, INV(0x0318));
+}
+
+// ============================================================
 // 初始化
 // ============================================================
 
@@ -134,15 +262,7 @@ void setup() {
   init_mic();
 
   // 显示启动画面
-  tft.fillScreen(ST77XX_BLACK);
-  tft.setTextColor(ST77XX_GREEN);
-  tft.setTextSize(2);
-  tft.setCursor(40, 100);
-  tft.print("VC-Keyboard");
-  tft.setTextSize(1);
-  tft.setTextColor(ST77XX_WHITE);
-  tft.setCursor(50, 130);
-  tft.print(mic_initialized ? "MIC OK" : "MIC FAIL");
+  show_splash_screen();
 
   Serial.println(F("RDY"));
 }

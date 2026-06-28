@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+/* ===== Design Tokens ===== */
+@theme {
+  --color-surface: #ffffff;
+  --color-surface-dark: #0f172a;  /* slate-950 */
+  --color-brand: #3b82f6;         /* blue-500 */
+  --color-brand-hover: #2563eb;   /* blue-600 */
+  --color-accent: #06b6d4;        /* cyan-500 */
+  --color-danger: #ef4444;        /* red-500 */
+  --color-success: #22c55e;       /* green-500 */
+  --color-warning: #eab308;       /* yellow-500 */
+}
+
+/* ===== Base ===== */
+html, body, #app {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+}
+
+/* ===== Frameless window drag regions ===== */
+.titlebar-drag {
+  -webkit-app-region: drag;
+}
+.titlebar-no-drag {
+  -webkit-app-region: no-drag;
+}
+
+/* ===== Scrollbar styling ===== */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #94a3b8;
+  border-radius: 3px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #475569;
+}

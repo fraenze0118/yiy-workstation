@@ -1,0 +1,39 @@
+appId: com.vckb.launcher
+productName: Yiy-Workstation
+copyright: Copyright © 2026 YYC
+
+icon: resources/icon.ico
+
+directories:
+  buildResources: resources
+  output: dist
+
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+  artifactName: ${productName}-Setup-${version}.${ext}
+
+nsis:
+  oneClick: false
+  perMachine: false
+  allowToChangeInstallationDirectory: true
+  deleteAppDataOnUninstall: true
+  createDesktopShortcut: true
+  shortcutName: Yiy-Workstation
+
+mac:
+  target:
+    - target: dmg
+      arch: [x64, arm64]
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+  artifactName: ${productName}-${version}-${arch}.${ext}
+
+asar: true
+compression: maximum
+

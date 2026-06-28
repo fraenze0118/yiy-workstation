@@ -7,20 +7,24 @@
 ## 关键文件
 
 > `doc/` 与 `scripts/` 已在 `.gitignore` 中（本地维护，不入库）；下表中带 † 的为本地文档。
-> 仓库内持久维护的是 `firmware/`、`sdk/`、`CLAUDE.md`、`README.md`。
+> 仓库内持久维护的是 `firmware/`、`sdk/`、`launcher/`、`CLAUDE.md`、`README.md`。
 
 | 文件 | 用途 |
 |------|------|
 | `firmware/arduino/vc-keyboard-pc/vc-keyboard-pc.ino` | 通用 PC 外设固件（仅需烧录一次） |
 | `sdk/python/vckb/device.py` | Python SDK 设备驱动 |
 | `sdk/python/vckb/framebuf.py` | 帧缓冲 + 行差分推送 |
-| `sdk/python/vckb/examples/` | 示例应用（self_test, tomato, paint, screen_mirror, solid_test, mini_test, pattern_test, frame_test） |
+| `sdk/python/vckb/apps/` | v0.2.0 应用模块（标准接口：`APP` + `main()`） |
+| `sdk/python/vckb/examples/` | 开发用 thin wrapper（import from apps/） |
+| `launcher/` | Electron + Vue 3 GUI Launcher（v0.2.0） |
 | `doc/PINOUT.md` † | 硬件引脚和驱动总结 |
 | `doc/DESIGN.md` † | 总体设计文档 |
 | `doc/PROTOCOL.md` † | 串口协议规范 |
 | `doc/ARCHITECTURE.md` † | 通信原理 |
 | `doc/SDK_PITFALLS.md` † | 开发踩坑记录 |
 | `doc/PERFORMANCE_PLAN.md` † | 帧率架构改进计划（压缩/差分/TinyUSB 取舍） |
+| `doc/v0.2.0-design.md` † | GUI Launcher 设计方案 |
+| `doc/v0.2.1-design.md` † | Voice Meter 应用设计 |
 
 ## 通信协议
 
@@ -127,6 +131,77 @@ Flash Size: 16MB (128Mb)
 - Adafruit ST7789 Library
 - ESP_I2S (Arduino-ESP32 3.x 内置)
 - Python: pyserial, numpy, pillow
+- Node.js 18+ (仅 Launcher 开发, 用户端打包后无需)
+
+## v0.2.1 — Voice Meter
+
+实时麦克风音频可视化: 64 频段 FFT 频谱 + 波形图 + dB 峰值。详见 `doc/v0.2.1-design.md`。
+
+### 当前应用列表 (5 apps)
+
+| ID | 名称 | 说明 |
+|----|------|------|
+| tomato | 番茄钟 | Pomodoro timer |
+| screen_mirror | 屏幕镜像 | PC 屏幕投射 ~6 FPS |
+| voice_meter | 语音电平表 | FFT 频谱 + 波形 |
+| self_test | 外设自检 | 全外设验证 |
+| image_test | 位图测试 | 4 阶段 push_frame 验证 |
+
+### Python 包名 vs import 名
+
+pip 包名 `pillow` → Python `import PIL`。Launcher 的 checkPythonPkg 中有映射表。
+
+### PYTHONPATH 自动注入
+
+Launcher 启动子进程时自动将本地 `sdk/python/` 加入 `PYTHONPATH`，无需 `pip install -e`。
+
+## v0.2.0 — GUI Launcher
+
+Electron + Vue 3 + Tailwind CSS 桌面应用，作为用户入口。详见 `doc/v0.2.0-design.md`。
+
+```
+launcher/
+├── src/
+│   ├── main/           # Electron Main Process (Node.js)
+│   │   ├── index.ts         # 窗口 + 生命周期
+│   │   ├── device-manager.ts # serialport 设备检测
+│   │   ├── app-runner.ts    # Python 子进程管理
+│   │   ├── app-registry.ts  # 应用注册表 (5 apps)
+│   │   └── ipc-handlers.ts  # IPC 路由
+│   ├── preload/        # contextBridge 安全桥
+│   └── renderer/       # Vue 3 前端
+│       └── src/components/  # 6 个 SFC 组件
+└── electron-builder.yml      # Windows .exe 打包
+```
+
+### 开发命令
+
+```
+cd launcher
+npm install          # 安装依赖
+npm run dev          # Electron + Vue HMR 开发
+npm run build        # 生产构建
+npm run package:win  # 构建 + 打包 Windows .exe
+```
+
+### 应用模块规范
+
+每个 `vckb/apps/<id>.py` 提供：
+- `APP: AppDefinition` — 元数据（id, name, icon, category, controls, module, requires）
+- `main()` — 入口函数，内部创建 `VCKeyboard()` 并运行事件循环
+- 主循环中检查 `os.environ.get("VCKB_STOP_SIGNAL")` 信号文件以支持干净停止
+
+### Launcher 停止应用的三级策略
+
+```
+L1 (0s):  写入信号文件 → Python poll 检测 → 自行清理退出
+L2 (3s):  SIGTERM → 优雅退出
+L3 (5s):  SIGKILL → 强制终止
+```
+
+### 固件 INVON 补偿宏
+
+ST7789 INVON 取反全部颜色。固件侧直接绘制（fillScreen/setTextColor/drawRect 等）需用 `INV(c)` 宏包裹每个颜色值：`#define INV(c) ((uint16_t)(~(c)))`
 
 ## 已知未解决问题
 

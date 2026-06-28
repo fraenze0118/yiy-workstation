@@ -3,20 +3,27 @@
 **ESP32-S3 驱动的多功能桌面外设——带屏幕、按键、编码器和麦克风的迷你终端。**
 
 ```
-┌─ PC (Python) ────────────────────────────────┐
-│  tomato.py / paint.py / screen_mirror.py     │
-│               vckb/device.py                 │
-└──────────────────┼───────────────────────────┘
-                   │ USB CDC Serial
-┌──────────────────┼───────────────────────────┐
-│  ESP32-S3 固件   │ 文本命令解析 / 输入采集    │
-│  ┌────┬────┬────┬┴────┐                      │
-│  │TFT │按键│编码│麦克风│                      │
-│  └────┴────┴────┴─────┘                      │
-└──────────────────────────────────────────────┘
+┌─ PC: Electron App (Yiy-Workstation Launcher) ─┐
+│  ┌──────────────────────────────────────────┐ │
+│  │  GUI: 设备检测 → 应用卡片 → 一键启停      │ │
+│  └──────────────────┬───────────────────────┘ │
+│                     │ child_process.spawn      │
+│  ┌──────────────────┴───────────────────────┐ │
+│  │  Python Apps (子进程)                     │ │
+│  │  tomato / voice_meter / screen_mirror ... │ │
+│  │               vckb/device.py             │ │
+│  └──────────────────┬───────────────────────┘ │
+└─────────────────────┼─────────────────────────┘
+                      │ USB CDC Serial
+┌─────────────────────┼─────────────────────────┐
+│  ESP32-S3 固件      │ 文本命令解析 / 输入采集  │
+│  ┌────┬────┬────┬───┴───┐                     │
+│  │TFT │按键│编码│麦克风  │                     │
+│  └────┴────┴────┴───────┘                     │
+└───────────────────────────────────────────────┘
 ```
 
-**一套固件，不刷不改。PC 端 Python SDK 驱动所有交互逻辑。**
+**固件烧录一次不变。Electron GUI 管理应用生命周期，Python SDK 驱动设备交互。**
 
 ---
 
@@ -45,37 +52,27 @@ pip install pyserial            # 必需
 pip install numpy pillow        # screen_mirror / pattern_test 等位图示例需要
 ```
 
-### 3. 外设自检
+### 3. 启动 GUI Launcher (推荐)
+
+```
+cd launcher
+npm install
+npm run dev
+```
+
+图形化界面：自动检测设备 → 点击卡片启动应用 → 一键停止。
+
+> 首次运行会检测 Python 环境，未安装则显示引导页。
+
+### 4. 命令行 (开发/调试)
 
 ```
 cd sdk/python
-python -B vckb/examples/self_test.py
-```
-
-屏幕显示按键状态、编码器位置、麦克风峰值。
-
-### 4. 番茄钟
-
-```
-python -B vckb/examples/tomato.py
-```
-
-KEY1 开始/暂停，KEY5 重置，编码器调时长。
-
-### 5. 屏幕镜像
-
-```
-python -B vckb/examples/screen_mirror.py
-```
-
-把 PC 屏幕实时投射到设备 320×240 屏（KEY1 暂停，KEY5 退出）。
-USB Full Speed 带宽下全屏约 6–7 FPS，静止/局部变化时差分只传变化区域，帧率更高。
-
-### 6. 显示通路自检
-
-```
-python -B vckb/examples/solid_test.py     # 纯色矩形: 验证位图分块/颜色
-python -B vckb/examples/pattern_test.py   # 全屏色带: 验证整屏绘制
+python -B vckb/examples/tomato.py          # 番茄钟
+python -B vckb/examples/screen_mirror.py    # 屏幕镜像
+python -B vckb/examples/voice_meter.py      # 语音电平表
+python -B vckb/examples/self_test.py        # 外设自检
+python -B vckb/examples/image_test.py       # 位图传输测试
 ```
 
 ---
@@ -91,7 +88,7 @@ python -B vckb/examples/pattern_test.py   # 全屏色带: 验证整屏绘制
 | 编码器 | PEC11L-4210F | A=45 B=46 BTN=42 |
 | 麦克风 | GSA4030H10-F26-8P (PDM) | CLK=14 DATA=15 |
 
-详见 `doc/PINOUT.md`（本地维护）。
+详见硬件原理图。
 
 ---
 
@@ -125,25 +122,12 @@ with VCKeyboard() as kb:
 
 ---
 
-## 文档
-
-> `doc/` 与 `scripts/` 已 `.gitignore`（本地维护，不入库）。下表带 † 为本地文档。
-
-| 文档 | 内容 |
-|------|------|
-| `doc/PINOUT.md` † | 硬件引脚 + 驱动总结 |
-| `doc/DESIGN.md` † | 总体设计 + 实施计划 |
-| `doc/PROTOCOL.md` † | 串口协议规范 (给写 app 的人看) |
-| `doc/ARCHITECTURE.md` † | 通信原理深度解析 |
-| `doc/SDK_PITFALLS.md` † | 开发踩坑记录 |
-| `doc/PERFORMANCE_PLAN.md` † | 帧率架构改进计划（压缩/差分/TinyUSB 取舍） |
-
 ---
 
 ## 性能说明
 
 - **位图传输**: USB-Serial-JTAG 为 USB Full Speed (~1 MB/s)，全屏 320×240×2≈143KB 受带宽限制约 6–7 FPS 上限。SDK 已做：字节取反查表化、按 ≤3072B 分块逐块 OK 流控、固件整块 block write + 80MHz SPI、screen_mirror 行差分 + BILINEAR。
-- **ESP32-S3 USB OTG 仅支持 Full Speed（无 HS PHY）**，切 TinyUSB 不能突破物理带宽。突破 7 FPS 软上限需减少数据量（软件压缩/细粒度差分），方案见 `doc/PERFORMANCE_PLAN.md` †。
+- **ESP32-S3 USB OTG 仅支持 Full Speed（无 HS PHY）**，切 TinyUSB 不能突破物理带宽。突破 7 FPS 软上限需减少数据量（软件压缩/细粒度差分）。
 
 ---
 
@@ -153,24 +137,24 @@ with VCKeyboard() as kb:
 vc-keyboard/
 ├── README.md
 ├── CLAUDE.md                     ← Claude 项目上下文 (入库)
-├── .gitignore                    ← doc/ 与 scripts/ 本地维护
-├── doc/  †                       ← 本地文档 (PINOUT/DESIGN/PROTOCOL/ARCHITECTURE/SDK_PITFALLS/PERFORMANCE_PLAN)
+├── .gitignore
+├── doc/                           ← 本地设计文档 (不入库)
 ├── scripts/ †                    ← 本地工具脚本
 ├── firmware/
 │   └── arduino/
 │       ├── vc-keyboard-pc/       ← 通用 PC 外设固件 (烧录这个)
 │       ├── backup/               ← 旧版固件
 │       └── test/                 ← 手动测试固件
+├── launcher/                     ← v0.2.0: Electron + Vue 3 GUI
+│   └── src/
+│       ├── main/                 ← Node.js: 设备检测 + 子进程管理
+│       ├── preload/              ← contextBridge 安全 API
+│       └── renderer/             ← Vue 3 + Tailwind 前端
 └── sdk/python/vckb/
     ├── device.py                 ← 设备驱动
     ├── framebuf.py               ← 帧缓冲 + 行差分推送
-    └── examples/
-        ├── self_test.py          ← 全外设自检
-        ├── tomato.py             ← 番茄钟
-        ├── paint.py              ← 画板
-        ├── screen_mirror.py      ← PC 屏幕镜像
-        ├── solid_test.py         ← 纯色矩形 (位图通路自检)
-        ├── pattern_test.py       ← 全屏色带 (整屏绘制自检)
-        ├── mini_test.py          ← 单帧传输对比
-        └── frame_test.py         ← 渐变帧自检
+    ├── apps/                     ← 应用模块 (APP + main)
+    │   ├── tomato.py, screen_mirror.py, voice_meter.py
+    │   ├── self_test.py, image_test.py
+    └── examples/                 ← thin wrappers (开发用)
 ```
