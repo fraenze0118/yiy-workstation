@@ -11,7 +11,7 @@ export interface AppDefinition {
   nameZh: string          // "番茄钟"
   description: string     // 简短描述
   icon: string            // emoji "🍅"
-  category: 'tool' | 'test' | 'game' | 'demo'
+  category: 'tool' | 'game' | 'test' | 'demo'
 
   controls: Record<string, string>
   // { "KEY1": "Start/Pause", "KEY5": "Reset", "Encoder": "Adjust time" }

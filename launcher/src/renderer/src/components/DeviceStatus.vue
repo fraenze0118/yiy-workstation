@@ -13,11 +13,15 @@ const statusLabel: Record<string, string> = {
 <template>
   <div
     class="flex items-center gap-3 px-4 py-1.5
-           bg-gray-100 dark:bg-gray-900
-           border-b border-gray-200 dark:border-gray-800"
+           border-b border-gray-200 dark:border-gray-800
+           transition-colors duration-300"
+    :class="{
+      'bg-blue-50 dark:bg-blue-950/30': store.status === 'connected',
+      'bg-gray-100 dark:bg-gray-900': store.status !== 'connected',
+    }"
   >
     <!-- Status dot with pulse animation when connected -->
-    <span class="relative flex h-2.5 w-2.5 flex-shrink-0">
+    <span class="relative flex h-2.5 w-2.5 flex-shrink-0" aria-hidden="true">
       <span
         class="absolute inline-flex h-full w-full rounded-full"
         :class="{
@@ -49,12 +53,14 @@ const statusLabel: Record<string, string> = {
     <button
       @click="store.scan()"
       :disabled="store.scanning || store.status === 'busy'"
-      class="flex items-center gap-1 text-[11px] px-2.5 py-1 rounded-md
+      class="flex items-center gap-1 text-xs px-2.5 py-1 rounded-md
              bg-blue-50 hover:bg-blue-100
              dark:bg-blue-900/30 dark:hover:bg-blue-900/50
              text-blue-600 dark:text-blue-400
              disabled:opacity-40 disabled:cursor-not-allowed
-             transition-colors"
+             transition-colors
+             focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-1"
+      aria-label="Scan for device"
     >
       <svg
         class="w-3 h-3"

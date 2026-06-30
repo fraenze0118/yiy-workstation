@@ -136,6 +136,11 @@ class VCKeyboard:
     # ── mic ──
     def mic_start(self): self._cmd("MIC:ON"); time.sleep(0.3)
     def mic_stop(self):  self._cmd("MIC:OFF")
+    def mic_pause(self):  self._cmd("MIC:OFF")  # 渲染位图时暂停: 上行音频流会污染 _push_chunk 的 OK 应答读取
+    def mic_resume(self): self._cmd("MIC:ON")   # 恢复 (mic_initialized 已 True, 无需 sleep)
+    def flush_input(self):
+        """丢弃 RX 缓冲中残留的上行数据 (如暂停 mic 前的音频包), 防止污染后续 OK 应答"""
+        if self._ser and self._ser.is_open: self._ser.reset_input_buffer()
 
     # ── system ──
     def ping(self): self._cmd("PING")

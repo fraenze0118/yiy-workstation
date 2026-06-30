@@ -29,10 +29,10 @@ const statusColor = computed(() => {
     class="flex items-center justify-between h-6 px-3
            bg-gray-100 dark:bg-gray-900
            border-t border-gray-200 dark:border-gray-800
-           text-[10px]"
+           text-xs"
   >
     <div class="flex items-center gap-2">
-      <span class="w-1.5 h-1.5 rounded-full"
+      <span class="w-1.5 h-1.5 rounded-full" aria-hidden="true"
             :class="{
               'bg-green-500': deviceStore.status === 'connected',
               'bg-yellow-500': deviceStore.status === 'busy',

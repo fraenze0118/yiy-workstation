@@ -1,18 +1,36 @@
 @import "tailwindcss";
 
-/* ===== Design Tokens ===== */
+/* ═══════════════════════════════════════════════
+   Design Tokens — v0.3.0 Brand System
+   ═══════════════════════════════════════════════ */
 @theme {
-  --color-surface: #ffffff;
-  --color-surface-dark: #0f172a;  /* slate-950 */
-  --color-brand: #3b82f6;         /* blue-500 */
-  --color-brand-hover: #2563eb;   /* blue-600 */
-  --color-accent: #06b6d4;        /* cyan-500 */
-  --color-danger: #ef4444;        /* red-500 */
-  --color-success: #22c55e;       /* green-500 */
-  --color-warning: #eab308;       /* yellow-500 */
+  /* Brand */
+  --color-brand:          #2563EB;   /* blue-600 */
+  --color-brand-light:    #3B82F6;   /* blue-500 */
+  --color-brand-dark:     #1D4ED8;   /* blue-700 */
+  --color-brand-muted:    #EFF6FF;   /* blue-50  */
+  --color-brand-muted-dark: #1E3A5F; /* blue-950 */
+
+  /* Semantic */
+  --color-surface:        #FFFFFF;
+  --color-surface-dark:   #0F172A;   /* slate-900 */
+  --color-surface-alt:    #F8FAFC;   /* slate-50  */
+  --color-surface-alt-dark: #020617; /* slate-950 */
+  --color-border:         #E2E8F0;   /* slate-200 */
+  --color-border-dark:    #1E293B;   /* slate-800 */
+
+  /* Functional */
+  --color-success:        #16A34A;   /* green-600 */
+  --color-success-dark:   #4ADE80;   /* green-400 */
+  --color-warning:        #CA8A04;   /* yellow-600 */
+  --color-warning-dark:   #FACC15;   /* yellow-400 */
+  --color-danger:         #DC2626;   /* red-600 */
+  --color-danger-dark:    #F87171;   /* red-400 */
 }
 
-/* ===== Base ===== */
+/* ═══════════════════════════════════════════════
+   Base
+   ═══════════════════════════════════════════════ */
 html, body, #app {
   margin: 0;
   padding: 0;
@@ -22,7 +40,23 @@ html, body, #app {
   font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
 }
 
-/* ===== Frameless window drag regions ===== */
+/* Subtle background texture — eliminates "flat void" demo feel */
+body {
+  background-color: var(--color-surface-alt);
+  background-image:
+    radial-gradient(circle, #94A3B8 0.5px, transparent 0.5px);
+  background-size: 20px 20px;
+  background-position: center;
+}
+.dark body {
+  background-color: var(--color-surface-alt-dark);
+  background-image:
+    radial-gradient(circle, #334155 0.5px, transparent 0.5px);
+}
+
+/* ═══════════════════════════════════════════════
+   Frameless window drag regions
+   ═══════════════════════════════════════════════ */
 .titlebar-drag {
   -webkit-app-region: drag;
 }
@@ -30,17 +64,37 @@ html, body, #app {
   -webkit-app-region: no-drag;
 }
 
-/* ===== Scrollbar styling ===== */
-::-webkit-scrollbar {
-  width: 6px;
+/* ═══════════════════════════════════════════════
+   Scrollbar
+   ═══════════════════════════════════════════════ */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #94a3b8; border-radius: 3px; }
+.dark ::-webkit-scrollbar-thumb { background: #475569; }
+
+/* ═══════════════════════════════════════════════
+   Card entrance stagger
+   ═══════════════════════════════════════════════ */
+@keyframes card-enter {
+  from {
+    opacity: 0;
+    transform: translateY(12px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
 }
-::-webkit-scrollbar-track {
-  background: transparent;
+.animate-card-enter {
+  animation: card-enter 300ms ease-out both;
 }
-::-webkit-scrollbar-thumb {
-  background: #94a3b8;
-  border-radius: 3px;
-}
-.dark ::-webkit-scrollbar-thumb {
-  background: #475569;
+
+/* ═══════════════════════════════════════════════
+   Reduced motion
+   ═══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

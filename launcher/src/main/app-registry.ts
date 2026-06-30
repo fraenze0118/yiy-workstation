@@ -51,6 +51,45 @@ export const APP_REGISTRY: AppDefinition[] = [
     requires: ['numpy'],
   },
 
+  // ── Games ──
+  {
+    id: 'breakout',
+    name: 'Breakout',
+    nameZh: '打砖块',
+    description: 'Classic brick breaker — 5 levels, encoder paddle control',
+    icon: '🧱',
+    category: 'game',
+    controls: {
+      KEY3: 'Move paddle left',
+      KEY4: 'Move paddle right',
+      KEY1: 'Launch ball / Restart',
+      KEY2: 'Pause / Resume',
+      KEY5: 'Exit',
+    },
+    module: 'vckb.apps.breakout',
+    requires: [],
+  },
+  {
+    id: 'tank_battle',
+    name: 'Tank Battle',
+    nameZh: '坦克大战',
+    description: 'Classic tank battle — 5 levels, auto-fire, 3 tank types',
+    icon: '🔫',
+    category: 'game',
+    controls: {
+      KEY1: '上移 ↑',
+      KEY2: '下移 ↓',
+      KEY3: '左移 ←',
+      KEY4: '右移 →',
+      SWITCH: '暂停 / 继续',
+      KEY5: '退出',
+      Encoder: '选择坦克',
+      'Encoder Btn': '确认选择',
+    },
+    module: 'vckb.apps.tank_battle',
+    requires: ['numpy'],
+  },
+
   // ── Tests ──
   {
     id: 'self_test',

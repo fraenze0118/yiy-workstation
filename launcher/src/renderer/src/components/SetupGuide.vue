@@ -3,6 +3,8 @@
  * Setup guide overlay — shown when Python or vckb SDK is not installed.
  * Guides the user through installing prerequisites.
  */
+import { Wrench } from 'lucide-vue-next'
+
 defineProps<{
   system: {
     python: { found: boolean; version: string; path: string }
@@ -23,12 +25,14 @@ const emit = defineEmits<{ retry: [] }>()
                 shadow-xl border border-gray-200 dark:border-gray-700">
       <!-- Header -->
       <div class="text-center mb-6">
-        <span class="text-5xl block mb-3">⚙️</span>
-        <h2 class="text-xl font-bold text-gray-900 dark:text-white">
-          Setup Required
+        <span class="inline-block mb-3 text-blue-500 dark:text-blue-400">
+          <Wrench :size="48" :stroke-width="1.5" />
+        </span>
+        <h2 class="text-lg font-bold text-gray-900 dark:text-white">
+          Welcome to Yiy-Workstation
         </h2>
         <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
-          Install the following to use Yiy-Workstation
+          Install the following to get started
         </p>
       </div>
 
@@ -85,7 +89,7 @@ const emit = defineEmits<{ retry: [] }>()
       </div>
 
       <!-- Auto PYTHONPATH hint -->
-      <p class="text-[10px] text-gray-400 dark:text-gray-600 text-center mb-4">
+      <p class="text-xs text-gray-400 dark:text-gray-600 text-center mb-4">
         PYTHONPATH auto-set to: {{ system.localSdk }}
       </p>
 
@@ -96,8 +100,8 @@ const emit = defineEmits<{ retry: [] }>()
                bg-blue-500 hover:bg-blue-600 active:bg-blue-700
                text-white font-semibold text-sm
                transition-colors duration-150
-               focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-2
-               dark:focus:ring-offset-gray-800"
+               focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-400 focus-visible:ring-offset-2
+               dark:focus-visible:ring-offset-gray-800"
       >
         {{ system.python.found && system.vckb.found ? 'Continue' : 'Check Again' }}
       </button>

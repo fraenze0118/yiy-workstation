@@ -1,11 +1,11 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import TitleBar from './components/TitleBar.vue'
-import DeviceStatus from './components/DeviceStatus.vue'
+import Sidebar from './components/Sidebar.vue'
 import AppGrid from './components/AppGrid.vue'
 import RunningOverlay from './components/RunningOverlay.vue'
-import StatusBar from './components/StatusBar.vue'
 import SetupGuide from './components/SetupGuide.vue'
+import WelcomeGuide from './components/WelcomeGuide.vue'
 import { useDeviceStore } from './stores/device'
 
 const deviceStore = useDeviceStore()
@@ -29,6 +29,9 @@ function needsSetup(): boolean {
   return !s.python.found || !s.vckb.found
 }
 
+// ── Category filter ──
+const selectedCategory = ref<string | null>(null)  // null = all
+
 onMounted(() => {
   checkSystem()
   deviceStore.scan()
@@ -38,28 +41,38 @@ onMounted(() => {
 <template>
   <div
     class="flex flex-col h-screen w-screen select-none
-           bg-gray-50 dark:bg-gray-950
-           text-gray-900 dark:text-gray-100
-           overflow-hidden"
+           text-slate-900 dark:text-slate-100
+           overflow-hidden
+           bg-slate-50 dark:bg-slate-950"
+    style="background-image: radial-gradient(circle, #cbd5e1 0.5px, transparent 0.5px); background-size: 20px 20px;"
   >
     <TitleBar />
-    <DeviceStatus />
 
-    <main class="flex-1 relative min-h-0">
-      <!-- Setup guide (shown when Python/vckb missing) -->
-      <SetupGuide
-        v-if="systemChecked && needsSetup()"
-        :system="systemStatus"
-        @retry="checkSystem()"
+    <div class="flex flex-1 min-h-0">
+      <!-- Sidebar -->
+      <Sidebar
+        :selected-category="selectedCategory"
+        @update:selected-category="selectedCategory = $event"
       />
 
-      <!-- App grid (behind setup if both shown) -->
-      <AppGrid />
+      <!-- Main content -->
+      <main class="flex-1 relative min-h-0">
+        <!-- Setup guide -->
+        <SetupGuide
+          v-if="systemChecked && needsSetup()"
+          :system="systemStatus"
+          @retry="checkSystem()"
+        />
 
-      <!-- Running overlay -->
-      <RunningOverlay />
-    </main>
+        <!-- Welcome guide (first connection only) -->
+        <WelcomeGuide />
 
-    <StatusBar />
+        <!-- App grid -->
+        <AppGrid :selected-category="selectedCategory" />
+
+        <!-- Running overlay -->
+        <RunningOverlay />
+      </main>
+    </div>
   </div>
 </template>
