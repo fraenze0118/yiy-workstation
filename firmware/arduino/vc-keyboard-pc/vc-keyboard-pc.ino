@@ -1,9 +1,10 @@
 /*
- * VC-Keyboard 通用 PC 外设固件
+ * VC-Keyboard 通用 PC 外设固件  (v0.4.0 — TinyUSB CDC)
  * MCU: ESP32-S3-WROOM-1-N16R8
  *
- * USB CDC Serial 连接 PC，接收绘制命令/二进制帧，
- * 上报按键/编码器/麦克风事件。
+ * USB Composite Device (CDC + HID + UAC), 当前 Phase 1 = CDC only.
+ * USB-OTG (TinyUSB) 模式替代旧 Hardware CDC and JTAG 模式,
+ * 为后续 HID Keyboard + UAC Microphone 铺路.
  *
  * 依赖库 (Arduino Library Manager):
  *   - Adafruit GFX Library
@@ -11,7 +12,14 @@
  *
  * 协议详见 doc/DESIGN.md
  *
- * 串口: USB CDC (Hardware CDC and JTAG 模式)
+ * 板子配置 (Arduino IDE):
+ *   Board:            ESP32S3 Dev Module
+ *   USB Mode:         USB-OTG (TinyUSB)
+ *   USB CDC On Boot:  Enabled
+ *   PSRAM:            Disabled
+ *   Flash Size:       16MB (128Mb)
+ *
+ * PID 覆写: 见同目录 build_opt.h (PID=0x4001, 区分新固件)
  */
 
 #include <Arduino.h>
@@ -252,9 +260,12 @@ void show_splash_screen() {
 // ============================================================
 
 void setup() {
-  Serial.setRxBufferSize(4096);  // 加大 RX 缓冲, 防止显示命令溢出
-  Serial.begin(115200);          // USB CDC, 波特率忽略, 实际 ~6Mbps
-  delay(500);
+  // TinyUSB CDC: 软件缓冲 (Arduino 层面), 替代 Hardware CDC 的硬缓冲.
+  // B 命令位图路径逐块读数据 + delay(0) yield 给 USB task, 不依赖大缓冲.
+  Serial.setRxBufferSize(8192);
+  Serial.begin(115200);          // USB CDC, 波特率忽略
+  while (!Serial) { delay(10); } // 等 USB 枚举完成 (TinyUSB 必需)
+  delay(200);                    // 枚举后稳定
 
   init_display();
   init_keys();

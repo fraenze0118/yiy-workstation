@@ -26,6 +26,10 @@
 | `doc/v0.2.0-design.md` † | GUI Launcher 设计方案 |
 | `doc/v0.2.1-design.md` † | Voice Meter 应用设计 |
 
+## USB 架构 (v0.4.0+)
+
+固件使用 **USB-OTG (TinyUSB)**，PID `0x4001` (旧 Hardware CDC 为 `0x1001`)。当前 Phase 1 仅 CDC，后续加 HID Keyboard + UAC Microphone。Launcher/SDK 按 VID `0x303A` 检测设备 (与 PID 无关，新旧固件均可检测)。
+
 ## 通信协议
 
 文本命令（`\n` 定界）+ 位图数据混传：
@@ -54,7 +58,7 @@
 ## 开发中的重要约束
 
 1. **麦克风驱动**: 只能 `#include <ESP_I2S.h>`，不能同时 include `driver/i2s.h`（类型冲突）。ESP32-S3 只有 I2S0 支持 PDM。
-2. **串口缓冲**: 固件必须 `Serial.setRxBufferSize(4096)` 在 `Serial.begin()` 之前，否则默认 256 字节会溢出丢命令。
+2. **串口缓冲**: 固件必须 `Serial.setRxBufferSize(8192)` 在 `Serial.begin()` 之前。TinyUSB 模式下这是 Arduino 层软件缓冲，低层 `CFG_TUD_CDC_RX_BUFSIZE=512` (见 `build_opt.h`). B 命令逐块读 + `delay(0)` yield 给 USB task, 不依赖大缓冲.
 3. **编码器 ISR**: 用 `REG_READ(GPIO_IN1_REG)` 一次读 A 和 B，避免竞态。边沿+电平判断方向，不用状态机 LUT。
 4. **屏幕**: 横屏 320×240 (`setRotation(1)`)，不是竖屏。
 5. **协议**: 无握手无校验，USB CDC 可靠传输。文本命令以 `\n` 定界。
@@ -117,12 +121,20 @@ USB-Serial-JTAG 外设为 **USB Full Speed（~1MB/s）**，全屏刷新 320×224
 
 ## Arduino IDE 配置
 
+**v0.4.0+ (TinyUSB)**:
 ```
 Board: ESP32S3 Dev Module
-USB Mode: Hardware CDC and JTAG
+USB Mode: USB-OTG (TinyUSB)
 USB CDC On Boot: Enabled
+USB Firmware MSC On Boot: Disabled
 PSRAM: Disabled
 Flash Size: 16MB (128Mb)
+```
+> PID 覆写为 `0x4001` (旧 Hardware CDC 为 `0x1001`), 见 `build_opt.h`.
+
+**v0.3.x 及之前 (Hardware CDC, 已废弃)**:
+```
+USB Mode: Hardware CDC and JTAG
 ```
 
 ## 依赖库
